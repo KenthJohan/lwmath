@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <math.h>
 
+/*
+https://www.scribd.com/document/14819165/Regressions-coniques-quadriques-circulaire-spherique
+page 11 to 15
+*/
 void fitcirc(float * p, int n, int stride, float * out_a, float * out_b, float * out_r)
 {
 	float sum_x = 0;

@@ -10,6 +10,7 @@
  * @param labels Output labels image
  * @param w Width of input, component, labels
  * @param h Height of input, component, labels
+ * @param mode mode 0 is non diagonal. mode 1 is with diagonal
  * @return 
  */
-void cclab_union_find(uint32_t const *input, uint32_t mask, uint32_t *component, uint32_t * labels, uint32_t w, uint32_t h);
+void cclab_union_find(uint32_t const *input, uint32_t mask, uint32_t *component, uint32_t *labels, uint32_t w, uint32_t h, int mode);

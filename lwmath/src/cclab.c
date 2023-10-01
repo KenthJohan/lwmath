@@ -119,7 +119,7 @@ void cclab_count(uint32_t *input, uint32_t * hgram, uint32_t n)
 }
 
 
-void cclab_union_find(uint32_t const *input, uint32_t mask, uint32_t *component, uint32_t *labels, uint32_t w, uint32_t h)
+void cclab_union_find(uint32_t const *input, uint32_t mask, uint32_t *component, uint32_t *labels, uint32_t w, uint32_t h, int mode)
 {
 	lwmath_assert_notnull(input);
 	lwmath_assert_notnull(component);
@@ -131,15 +131,33 @@ void cclab_union_find(uint32_t const *input, uint32_t mask, uint32_t *component,
 		component[i] = i;
 	}
 
-	for (uint32_t x = 0; x < w-1; x++)
+	switch (mode)
 	{
-		for (uint32_t y = 0; y < h-1; y++)
+	case 0:
+		for (uint32_t x = 0; x < w-1; x++)
 		{
-			cclab_union_coords(input, mask, component, w, h, x, y, (x + 0), (y + 1));
-			cclab_union_coords(input, mask, component, w, h, x, y, (x + 1), (y + 0));
-			//cclab_union_coords(input, mask, component, w, h, x, y, x + 1, y + 1);
+			for (uint32_t y = 0; y < h-1; y++)
+			{
+				cclab_union_coords(input, mask, component, w, h, x, y, (x + 0), (y + 1));
+				cclab_union_coords(input, mask, component, w, h, x, y, (x + 1), (y + 0));
+			}
 		}
+		break;
+	
+	case 1:
+		for (uint32_t x = 0; x < w-1; x++)
+		{
+			for (uint32_t y = 0; y < h-1; y++)
+			{
+				cclab_union_coords(input, mask, component, w, h, x, y, (x + 0), (y + 1)); // Check south north
+				cclab_union_coords(input, mask, component, w, h, x, y, (x + 1), (y + 0)); // Check west east
+				cclab_union_coords(input, mask, component, w, h, x, (y + 1), (x + 1), y); // Check NE and SW
+				cclab_union_coords(input, mask, component, w, h, x, y, (x + 1), (y + 1)); // Check NS and SE
+			}
+		}
+		break;
 	}
+
 
 	for (uint32_t y = 0; y < h; ++y)
 	{

@@ -14,11 +14,11 @@
 
 
 
-void connected_components_demo(Tigr const *bmp, uint32_t * comp, uint32_t * labels, Tigr *out)
+void connected_components_demo(uint32_t * input, uint32_t * comp, uint32_t * labels, Tigr *out)
 {
-	cclab_union_find((uint32_t*)bmp->pix, 0xFFFFFFFF, comp, labels, bmp->w, bmp->h);
 	TPixel * pix = out->pix;
-	for(int i = 0; i < (bmp->w * bmp->h); ++i, ++pix)
+	int n = out->w * out->h;
+	for(int i = 0; i < n; ++i, ++pix)
 	{
 		uint32_t c = labels[i];
 		if(c)
@@ -27,7 +27,14 @@ void connected_components_demo(Tigr const *bmp, uint32_t * comp, uint32_t * labe
 			pix->r = (h >> 0) & 0xFF;
 			pix->g = (h >> 8) & 0xFF;
 			pix->b = (h >> 16) & 0xFF;
-			pix->a = 255;
+			pix->a = 0xFF;
+		}
+		else
+		{
+			pix->r = 0x00;
+			pix->g = 0x00;
+			pix->b = 0x00;
+			pix->a = 0xFF;
 		}
 	}
 }
@@ -37,18 +44,16 @@ typedef struct
 	tigr_mouse_t mouse;
 } app_t;
 
+#define THE_FLAG 0x01
 
-void paint(Tigr *bmp, app_t * app)
+void put_flag_by_mouse(uint32_t * flags, int w, int h, tigr_mouse_t * mouse)
 {
-	if(app->mouse.down)
+	if(mouse->down)
 	{
-		int x = app->mouse.x;
-		int y = app->mouse.y;
-		int i = y * bmp->w + x;
-		bmp->pix[i].r = 0xFF;
-		bmp->pix[i].g = 0x00;
-		bmp->pix[i].b = 0x00;
-		bmp->pix[i].a = 0xFF;
+		int x = mouse->x;
+		int y = mouse->y;
+		int i = y * w + x;
+		flags[i] ^= THE_FLAG;
 	}
 }
 
@@ -56,26 +61,37 @@ int main(int argc, char *argv[])
 {
 	ecs_world_t *world = ecs_init();
 	app_t app = {0};
-	Tigr *screen = tigrWindow(100, 100, "circle_fitting", 0);
-	Tigr *backdrop = tigrBitmap(screen->w, screen->h);
+	int w = 100;
+	int h = 100;
+	Tigr *bmp_screen = tigrWindow(w, h, "circle_fitting", 0);
+	Tigr *bmp_paint = tigrBitmap(w, h);
+	Tigr *bmp_labels = tigrBitmap(w, h);
 
-	uint32_t * labels = calloc(1, sizeof(uint32_t)*backdrop->w*backdrop->h);
-	uint32_t * components = calloc(1, sizeof(uint32_t)*backdrop->w*backdrop->h);
+	uint32_t * flags = calloc(1, sizeof(uint32_t)*w*h);
+	uint32_t * labels = calloc(1, sizeof(uint32_t)*w*h);
+	uint32_t * components = calloc(1, sizeof(uint32_t)*w*h);
 
-	while (!tigrClosed(screen))
+	while (!tigrClosed(bmp_screen))
 	{
-		tigrClear(screen, tigrRGB(0x00, 0x00, 0x00));
+		tigrClear(bmp_screen, tigrRGB(0x00, 0x00, 0x00));
 		//tigrCircle(screen, 50, 50, 10, tigrRGB(0xFF, 0xFF, 0xFF));
-		tigr_mouse_get(screen, &app.mouse);
+		tigr_mouse_get(bmp_screen, &app.mouse);
 
-		paint(backdrop, &app);
-		connected_components_demo(backdrop, components, labels, backdrop);
-		tigrBlitAlpha(screen, backdrop, 0, 0, 0, 0, backdrop->w, backdrop->h, 0.5f);
+		put_flag_by_mouse(flags, w, h, &app.mouse);
 
-		tigrUpdate(screen);
+
+		cclab_union_find(flags, THE_FLAG, components, labels, w, h, 1);
+		connected_components_demo(flags, components, labels, bmp_labels);
+
+
+		tigrBlitAlpha(bmp_screen, bmp_labels, 0, 0, 0, 0, w, h, 0.5f);
+		tigrBlitAlpha(bmp_screen, bmp_paint, 0, 0, 0, 0, w, h, 0.5f);
+
+		tigrUpdate(bmp_screen);
 	}
-	tigrFree(screen);
-	tigrFree(backdrop);
+	tigrFree(bmp_screen);
+	tigrFree(bmp_paint);
+	tigrFree(bmp_labels);
 
 	ecs_fini(world);
 	return 0;
