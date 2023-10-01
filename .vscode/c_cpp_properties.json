@@ -3,10 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "${HOME}/bake/include",
-                "/usr/include/eigen3",
-                "/usr/include/jsoncpp",
-                "/usr/include/opencv4"
+                "${HOME}/bake/include"
             ],
             "defines": [
                 "_DEBUG",

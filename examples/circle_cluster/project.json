@@ -1,5 +1,5 @@
 {
-	"id": "circle_fitting",
+	"id": "circle_cluster",
 	"type": "application",
 	"value": {
 		"language": "c",

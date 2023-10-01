@@ -6,18 +6,14 @@
 		"public": false,
 		"use": [
 			"tigr",
-			"platform",
-			"hac",
-			"ouster_clib",
+			"lwmath",
 			"flecs"
 		]
 	},
 	"lang.c": {
 		"lib": [
 			"tigr",
-			"hac",
-			"ouster_clib",
-			"platform",
+			"lwmath",
 			"flecs",
 			"m",
 			"GL",

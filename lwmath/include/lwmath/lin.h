@@ -49,8 +49,4 @@ void find_minmax_u32(uint32_t *data, int n, uint32_t *out_min, uint32_t *out_max
 
 void find_minmax_u32_index(uint32_t *data, int n, int *out_min, int *out_max);
 
-
-void circfit(float * p, int n, int stride, float * out_a, float * out_b, float * out_r);
-
-
 uint32_t djb33_hash(const char* s, size_t len);
