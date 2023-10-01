@@ -1,0 +1,30 @@
+{
+	"id": "tigr",
+	"type": "package",
+	"value": {
+		"use": [
+			"platform"
+		],
+		"language": "c",
+		"public": true
+	},
+	"lang.c": {
+		"defines": [
+			"_GNU_SOURCE"
+		],
+		"export-symbols": true,
+		"static": true,
+		"cflags": [
+			"-Werror",
+			"-Wall",
+			"-Wpedantic",
+			"-Wextra",
+			"-Wno-error=unused-variable"
+		],
+		"lib": [
+			"m",
+			"GL",
+			"X11"
+		]
+	}
+}

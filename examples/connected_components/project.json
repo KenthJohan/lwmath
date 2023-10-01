@@ -1,0 +1,34 @@
+{
+	"id": "connected_components",
+	"type": "application",
+	"value": {
+		"language": "c",
+		"public": false,
+		"use": [
+			"tigr",
+			"platform",
+			"hac",
+			"ouster_clib",
+			"flecs"
+		]
+	},
+	"lang.c": {
+		"lib": [
+			"tigr",
+			"hac",
+			"ouster_clib",
+			"platform",
+			"flecs",
+			"m",
+			"GL",
+			"X11"
+		],
+		"cflags": [
+			"-Werror",
+			"-Wall",
+			"-Wpedantic",
+			"-Wextra",
+			"-Wno-error=unused-variable"
+		]
+	}
+}
