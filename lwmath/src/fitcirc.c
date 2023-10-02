@@ -80,6 +80,31 @@ void fitcirc(void * data, int n, int stride, float * out_a, float * out_b, float
 	out_r[0] = r;
 }
 
+float fitcirc_error(float x, float y, float a, float b, float r)
+{
+	float xa = x - a;
+	float yb = y - b;
+	return r - sqrtf(xa*xa + yb*yb);
+}
+
+
+float fitcirc_error2(void * data, int n, int stride, float a, float b, float r)
+{
+	char * ptr = data;
+	float sum = 0;
+	for (int i = 0; i < n; ++i, ptr += stride)
+	{
+		float * p = (float *)ptr;
+		float x = p[0];
+		float y = p[1];
+		float e = fitcirc_error(x, y, a, b, r);
+		sum += e*e;
+	}
+	sum = (1.0 / (float)n) * sum;
+	return sqrtf(sum);
+}
+
+
 
 
 

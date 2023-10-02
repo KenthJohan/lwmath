@@ -13,7 +13,7 @@
 #include <tigr/tigr.h>
 #include <tigr/tigr_mouse.h>
 
-#include <flecs.h>
+
 
 
 #define MAX_POINTS 128
@@ -72,6 +72,10 @@ void put_flag_by_mouse(uint32_t *flags, int w, int h, tigr_mouse_t *mouse)
 typedef struct
 {
 	map_entry_t entry;
+	float a;
+	float b;
+	float r;
+	float e;
 	int cap;
 	int count;
 	vec2_t buf[];
@@ -128,8 +132,24 @@ void regions_flush(map_t * map)
 	map_clear(map);
 }
 
+void paint_region(region_t * region, Tigr *out)
+{
+	float x = region->a;
+	float y = region->b;
+	float r = region->r;
+	float w = out->w;
+	float h = out->h;
+	if(x <= 0){return;}
+	if(x >= w){return;}
+	if(y <= 0){return;}
+	if(y >= h){return;}
+	if(r <= 0){return;}
+	//printf("fitcirc %f %f %f\n", x, y, r);
+	tigrCircle(out, x, y, r, tigrRGB(0xFF, 0xFF, 0xFF));
+}
 
-void circle1_and_flush(map_t * map, Tigr *out)
+
+void circle1(map_t * map, Tigr *out)
 {
 	map_iter_t it = map_iter(map);
 	while(1)
@@ -140,18 +160,9 @@ void circle1_and_flush(map_t * map, Tigr *out)
 			break;
 		}
 		region_t * region = map_entry(e, region_t, entry);
-		float a;
-		float b;
-		float r;
-		fitcirc(region->buf, region->count, sizeof(vec2_t), &a, &b, &r);
-		free(region);
-		printf("fitcirc %f %f %f\n", a, b, r);
-		if(a >= 0 && a < out->w && b >= 0 && b < out->h && r > 0)
-		{
-			tigrCircle(out, a, b, r, tigrRGB(0xFF, 0xFF, 0xFF));
-		}
+		fitcirc(region->buf, region->count, sizeof(vec2_t), &region->a, &region->b, &region->r);
+		paint_region(region, out);
 	}
-	map_clear(map);
 }
 
 
@@ -166,7 +177,6 @@ typedef struct
 
 int main(int argc, char *argv[])
 {
-	ecs_world_t *world = ecs_init();
 	app_t app = {0};
 	int w = 100;
 	int h = 100;
@@ -192,8 +202,8 @@ int main(int argc, char *argv[])
 			cclab_union_find(flags, THE_FLAG, components, labels, w, h, 1);
 			labels_mapping(labels, components, w, h, &map);
 			printf("map.count %i\n", map.count);
-			circle1_and_flush(&map, bmp_paint);
-			//regions_flush(&map);
+			circle1(&map, bmp_paint);
+			regions_flush(&map);
 
 			paint_labels(flags, components, labels, bmp_labels);
 		}
@@ -208,6 +218,6 @@ int main(int argc, char *argv[])
 	tigrFree(bmp_paint);
 	tigrFree(bmp_labels);
 	
-	ecs_fini(world);
+
 	return 0;
 }

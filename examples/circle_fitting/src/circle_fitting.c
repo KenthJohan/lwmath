@@ -4,23 +4,26 @@
 #include <unistd.h>
 #include <math.h>
 #include <float.h>
-#include <flecs.h>
 #include <lwmath/lin.h>
 #include <lwmath/fitcirc.h>
 
 #include <tigr/tigr.h>
 #include <tigr/tigr_mouse.h>
 
-void circle1(Tigr const *bmp, Tigr *out)
+#define THE_FLAG 0x01
+
+void circle1(uint32_t const *flags, Tigr *out)
 {
 	int j = 0;
 	vec2_t pos[128];
-	for (int x = 0; x < bmp->w; ++x)
+	int w = out->w;
+	int h = out->h;
+	for (int x = 0; x < w; ++x)
 	{
-		for (int y = 0; y < bmp->h; ++y)
+		for (int y = 0; y < h; ++y)
 		{
-			int i = y * bmp->w + x;
-			if (bmp->pix[i].r == 0xFF)
+			int i = y * w + x;
+			if (flags[i] & THE_FLAG)
 			{
 				if (j > 128)
 				{
@@ -37,12 +40,37 @@ void circle1(Tigr const *bmp, Tigr *out)
 	float r;
 next:
 	fitcirc(pos, j, sizeof(vec2_t), &a, &b, &r);
-	if(a >= 0 && a < bmp->w && b >= 0 && b < bmp->h && r > 0)
+	if(a >= 0 && a < w && b >= 0 && b < h && r > 0)
 	{
+		float e = fitcirc_error2(pos, j, sizeof(vec2_t), a, b, r);
+		char buf[64];
+		snprintf(buf, 64, "Error %f\n", e);
+		//printf("error: %f\n", e);
+		tigrPrint(out, tfont, 0, 0, tigrRGB(0xFF, 0xFF, 0x00), buf);
 		tigrCircle(out, round(a), round(b), round(r), tigrRGB(0xFF, 0xFF, 0xFF));
 	}
 	return;
 }
+
+
+void paint_flags(uint32_t *flags, Tigr *out)
+{
+	TPixel *pix = out->pix;
+	int n = out->w * out->h;
+	for (int i = 0; i < n; ++i, ++pix)
+	{
+		uint32_t c = flags[i];
+		if (c & THE_FLAG)
+		{
+			pix->r = 0xFF;
+			pix->g = 0x00;
+			pix->b = 0x00;
+			pix->a = 0xFF;
+		}
+	}
+}
+
+
 
 typedef struct
 {
@@ -50,40 +78,60 @@ typedef struct
 } app_t;
 
 
-void paint(Tigr *bmp, app_t * app)
+
+
+void put_flag_by_mouse(uint32_t *flags, int w, int h, tigr_mouse_t *mouse)
 {
-	if(app->mouse.down)
+	int x = mouse->x;
+	int y = mouse->y;
+	int i = y * w + x;
+	if(mouse->down)
 	{
-		int x = app->mouse.x;
-		int y = app->mouse.y;
-		int i = y * bmp->w + x;
-		bmp->pix[i].r ^= 0xFF;
-		bmp->pix[i].g = 0x00;
-		bmp->pix[i].b = 0x00;
-		bmp->pix[i].a = 0xFF;
+		flags[i] ^= THE_FLAG;
 	}
+
+	if(mouse->btn & 0x1)
+	{
+		//flags[i] |= THE_FLAG;
+	}
+	if(mouse->btn & 0x2)
+	{
+		//flags[i] &= ~THE_FLAG;
+	}
+	//printf("%i\n", flags[i]);
 }
+
 
 int main(int argc, char *argv[])
 {
-	ecs_world_t *world = ecs_init();
 	app_t app = {0};
-	Tigr *screen = tigrWindow(100, 100, "circle_fitting", 0);
-	Tigr *backdrop = tigrBitmap(screen->w, screen->h);
-	while (!tigrClosed(screen))
+	int w = 100;
+	int h = 100;
+	Tigr *bmp_screen = tigrWindow(w, h, "circle_fitting", 0);
+	Tigr *bmp_paint = tigrBitmap(w, h);
+	Tigr *bmp_circle = tigrBitmap(w, h);
+	uint32_t *flags = calloc(1, sizeof(uint32_t) * w * h);
+	while (!tigrClosed(bmp_screen))
 	{
-		tigrClear(screen, tigrRGB(0x00, 0x00, 0x00));
 		//tigrCircle(screen, 50, 50, 10, tigrRGB(0xFF, 0xFF, 0xFF));
-		tigr_mouse_get(screen, &app.mouse);
-		paint(backdrop, &app);
-		circle1(backdrop, screen);
-		tigrBlitAlpha(screen, backdrop, 0, 0, 0, 0, backdrop->w, backdrop->h, 0.5f);
+		tigr_mouse_get(bmp_screen, &app.mouse);
+		if(app.mouse.down)
+		{
+			tigrClear(bmp_screen, tigrRGB(0x00, 0x00, 0x00));
+			tigrClear(bmp_circle, tigrRGB(0x00, 0x00, 0x00));
+			tigrClear(bmp_paint, tigrRGB(0x00, 0x00, 0x00));
+			put_flag_by_mouse(flags, w, h, &app.mouse);
+			paint_flags(flags, bmp_paint);
+			circle1(flags, bmp_circle);
+			tigrBlitAlpha(bmp_screen, bmp_circle, 0, 0, 0, 0, w, h, 1.0f);
+			tigrBlitAlpha(bmp_screen, bmp_paint, 0, 0, 0, 0, w, h, 0.6f);
+		}
+		tigrUpdate(bmp_screen);
 
-		tigrUpdate(screen);
 	}
-	tigrFree(screen);
-	tigrFree(backdrop);
+	tigrFree(bmp_screen);
+	tigrFree(bmp_paint);
+	tigrFree(bmp_circle);
 
-	ecs_fini(world);
 	return 0;
 }

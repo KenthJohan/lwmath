@@ -6,8 +6,7 @@
 		"public": false,
 		"use": [
 			"tigr",
-			"lwmath",
-			"flecs"
+			"lwmath"
 		]
 	},
 	"lang.c": {
