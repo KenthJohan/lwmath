@@ -46,8 +46,9 @@ next:
 		char buf[64];
 		snprintf(buf, 64, "Error %f\n", e);
 		//printf("error: %f\n", e);
-		tigrPrint(out, tfont, 0, 0, tigrRGB(0xFF, 0xFF, 0x00), buf);
-		tigrCircle(out, round(a), round(b), round(r), tigrRGB(0xFF, 0xFF, 0xFF));
+		tigrPrint(out, tfont, 0, 0, tigrRGB(0xEE, 0xEE, 0x00), buf);
+		//tigrFillCircle(out, round(a), round(b), round(r), tigrRGBA(0x00, 0xAA, 0xFF, 0x88));
+		tigrCircle(out, round(a), round(b), round(r), tigrRGBA(0x77, 0x77, 0x77, 0xFF));
 	}
 	return;
 }
@@ -118,13 +119,13 @@ int main(int argc, char *argv[])
 		if(app.mouse.down)
 		{
 			tigrClear(bmp_screen, tigrRGB(0x00, 0x00, 0x00));
-			tigrClear(bmp_circle, tigrRGB(0x00, 0x00, 0x00));
-			tigrClear(bmp_paint, tigrRGB(0x00, 0x00, 0x00));
 			put_flag_by_mouse(flags, w, h, &app.mouse);
 			paint_flags(flags, bmp_paint);
 			circle1(flags, bmp_circle);
 			tigrBlitAlpha(bmp_screen, bmp_circle, 0, 0, 0, 0, w, h, 1.0f);
-			tigrBlitAlpha(bmp_screen, bmp_paint, 0, 0, 0, 0, w, h, 0.6f);
+			tigrBlitAlpha(bmp_screen, bmp_paint, 0, 0, 0, 0, w, h, 0.7f);
+			tigrClear(bmp_paint, tigrRGBA(0x00, 0x00, 0x00, 0x00));
+			tigrClear(bmp_circle, tigrRGBA(0x00, 0x00, 0x00, 0x00));
 		}
 		tigrUpdate(bmp_screen);
 

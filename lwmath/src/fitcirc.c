@@ -108,6 +108,116 @@ float fitcirc_error2(void * data, int n, int stride, float a, float b, float r)
 
 
 
+
+/*
+
+void tigrPlot(uint32_t* bmp, int x, int y, uint32_t pix) {
+    int xa, i, a;
+
+    int cx = bmp->cx;
+    int cy = bmp->cy;
+    int cw = bmp->cw >= 0 ? bmp->cw : bmp->w;
+    int ch = bmp->ch >= 0 ? bmp->ch : bmp->h;
+
+    if (x >= cx && y >= cy && x < cx + cw && y < cy + ch) {
+        xa = EXPAND(pix.a);
+        a = xa * xa;
+        i = y * bmp->w + x;
+
+        bmp->pix[i].r += (unsigned char)((pix.r - bmp->pix[i].r) * a >> 16);
+        bmp->pix[i].g += (unsigned char)((pix.g - bmp->pix[i].g) * a >> 16);
+        bmp->pix[i].b += (unsigned char)((pix.b - bmp->pix[i].b) * a >> 16);
+        bmp->pix[i].a += (bmp->blitMode) * (unsigned char)((pix.a - bmp->pix[i].a) * a >> 16);
+    }
+}
+
+
+void tigrLine(Tigr* bmp, int x0, int y0, int x1, int y1, TPixel color) {
+    int sx, sy, dx, dy, err, e2;
+    dx = abs(x1 - x0);
+    dy = abs(y1 - y0);
+    if (x0 < x1)
+        sx = 1;
+    else
+        sx = -1;
+    if (y0 < y1)
+        sy = 1;
+    else
+        sy = -1;
+    err = dx - dy;
+
+    do {
+        tigrPlot(bmp, x0, y0, color);
+        e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
+    } while (x0 != x1 || y0 != y1);
+}
+
+
+void tigrFillCircle(Tigr* bmp, int x0, int y0, int r, TPixel color) {
+    if (r <= 0) {
+        return;
+    }
+
+    int E = 1 - r;
+    int dx = 0;
+    int dy = -2 * r;
+    int x = 0;
+    int y = r;
+
+    tigrLine(bmp, x0 - r + 1, y0, x0 + r, y0, color);
+
+    while (x < y - 1) {
+        x++;
+
+        if (E >= 0) {
+            y--;
+            dy += 2;
+            E += dy;
+            tigrLine(bmp, x0 - x + 1, y0 + y, x0 + x, y0 + y, color);
+            tigrLine(bmp, x0 - x + 1, y0 - y, x0 + x, y0 - y, color);
+        }
+
+        dx += 2;
+        E += dx + 1;
+
+        if (x != y) {
+            tigrLine(bmp, x0 - y + 1, y0 + x, x0 + y, y0 + x, color);
+            tigrLine(bmp, x0 - y + 1, y0 - x, x0 + y, y0 - x, color);
+        }
+    }
+}
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void test()
 {
 	vec2_t p[] = {
