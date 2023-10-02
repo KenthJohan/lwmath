@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
 #include <float.h>
 #include <flecs.h>
 #include <lwmath/lin.h>
@@ -35,10 +36,10 @@ void circle1(Tigr const *bmp, Tigr *out)
 	float b;
 	float r;
 next:
-	fitcirc((float *)pos, j, 2, &a, &b, &r);
+	fitcirc(pos, j, sizeof(vec2_t), &a, &b, &r);
 	if(a >= 0 && a < bmp->w && b >= 0 && b < bmp->h && r > 0)
 	{
-		tigrCircle(out, a, b, r, tigrRGB(0xFF, 0xFF, 0xFF));
+		tigrCircle(out, round(a), round(b), round(r), tigrRGB(0xFF, 0xFF, 0xFF));
 	}
 	return;
 }
@@ -56,7 +57,7 @@ void paint(Tigr *bmp, app_t * app)
 		int x = app->mouse.x;
 		int y = app->mouse.y;
 		int i = y * bmp->w + x;
-		bmp->pix[i].r = 0xFF;
+		bmp->pix[i].r ^= 0xFF;
 		bmp->pix[i].g = 0x00;
 		bmp->pix[i].b = 0x00;
 		bmp->pix[i].a = 0xFF;

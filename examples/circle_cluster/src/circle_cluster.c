@@ -52,8 +52,20 @@ void put_flag_by_mouse(uint32_t *flags, int w, int h, tigr_mouse_t *mouse)
 	int x = mouse->x;
 	int y = mouse->y;
 	int i = y * w + x;
-	flags[i] ^= THE_FLAG;
-	printf("%i\n", flags[i]);
+	if(mouse->down)
+	{
+		flags[i] ^= THE_FLAG;
+	}
+
+	if(mouse->btn & 0x1)
+	{
+		//flags[i] |= THE_FLAG;
+	}
+	if(mouse->btn & 0x2)
+	{
+		//flags[i] &= ~THE_FLAG;
+	}
+	//printf("%i\n", flags[i]);
 }
 
 
@@ -131,7 +143,7 @@ void circle1_and_flush(map_t * map, Tigr *out)
 		float a;
 		float b;
 		float r;
-		fitcirc((float *)region->buf, region->count, 2, &a, &b, &r);
+		fitcirc(region->buf, region->count, sizeof(vec2_t), &a, &b, &r);
 		free(region);
 		printf("fitcirc %f %f %f\n", a, b, r);
 		if(a >= 0 && a < out->w && b >= 0 && b < out->h && r > 0)
@@ -173,9 +185,9 @@ int main(int argc, char *argv[])
 		// tigrCircle(screen, 50, 50, 10, tigrRGB(0xFF, 0xFF, 0xFF));
 		tigr_mouse_get(bmp_screen, &app.mouse);
 
-		if (app.mouse.down)
+		if (app.mouse.btn)
 		{
-			tigrClear(bmp_paint, tigrRGB(0x00, 0x00, 0x00));
+			tigrClear(bmp_paint, tigrRGBA(0x00, 0x00, 0x00, 0x00));
 			put_flag_by_mouse(flags, w, h, &app.mouse);
 			cclab_union_find(flags, THE_FLAG, components, labels, w, h, 1);
 			labels_mapping(labels, components, w, h, &map);
@@ -187,7 +199,7 @@ int main(int argc, char *argv[])
 		}
 
 		tigrClear(bmp_screen, tigrRGB(0x00, 0x00, 0x00));
-		tigrBlitAlpha(bmp_screen, bmp_labels, 0, 0, 0, 0, w, h, 0.5f);
+		tigrBlitAlpha(bmp_screen, bmp_labels, 0, 0, 0, 0, w, h, 1.0f);
 		tigrBlitAlpha(bmp_screen, bmp_paint, 0, 0, 0, 0, w, h, 0.5f);
 		tigrUpdate(bmp_screen);
 

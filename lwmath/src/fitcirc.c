@@ -7,7 +7,7 @@
 https://www.scribd.com/document/14819165/Regressions-coniques-quadriques-circulaire-spherique
 page 11 to 15
 */
-void fitcirc(float * p, int n, int stride, float * out_a, float * out_b, float * out_r)
+void fitcirc(void * data, int n, int stride, float * out_a, float * out_b, float * out_r)
 {
 	float sum_x = 0;
 	float sum_y = 0;
@@ -18,8 +18,10 @@ void fitcirc(float * p, int n, int stride, float * out_a, float * out_b, float *
 	float sum_xxy = 0;
 	float sum_xyy = 0;
 	float sum_yyy = 0;
-	for (int i = 0; i < n; ++i, p += stride)
+	char * ptr = data;
+	for (int i = 0; i < n; ++i, ptr += stride)
 	{
+		float * p = (float *)ptr;
 		float x = p[0];
 		float y = p[1];
 		sum_x += x;

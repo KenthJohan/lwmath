@@ -10,7 +10,7 @@ https://github.com/SanderMertens/flecs/blob/master/src/datastructures/map.c
 #include <stdlib.h>
 #include <string.h>
 
-#define MAP_LOAD_FACTOR (12)
+#define MAP_LOAD_FACTOR 12
 
 static uint8_t map_log2(uint32_t v)
 {
@@ -194,9 +194,10 @@ map_iter_t map_iter(const map_t *map)
 
 map_entry_t *map_next(map_iter_t *iter)
 {
-	map_entry_t *entry = iter->entry;
+	map_entry_t *entry;
 
 	// Check if current bucket has entries, if so then return that entry:
+	entry = iter->entry;
 	if (entry != NULL)
 	{
 		iter->entry = entry->next;
@@ -216,8 +217,9 @@ map_entry_t *map_next(map_iter_t *iter)
 		entry = iter->bucket->first;
 	} while (entry == NULL);
 	
-	lwmath_assert(entry != NULL, "");
+	lwmath_assert(entry != NULL, "Internal logic error");
 
+	// Set current bucket to next entry:
 	iter->entry = entry->next;
 
 	return entry;
