@@ -73,5 +73,28 @@
 				"externalConsole": false,
 			}
 		},
+		{
+			"name": "Launch map_demo",
+			"type": "cppdbg",
+			"request": "launch",
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}/examples/map_demo",
+			"environment": [
+				{
+					"name": "LD_LIBRARY_PATH",
+					"value": "${workspaceFolder}/bin/x64-Linux-debug:${env:HOME}/bake/x64-Linux/debug/lib/"
+				},
+			],
+			"program": "${workspaceFolder}/examples/map_demo/bin/x64-Linux-debug/map_demo",
+			"args": [],
+			"osx": {
+				"MIMode": "lldb",
+				"targetArchitecture": "arm64",
+				"externalConsole": false,
+			},
+			"linux": {
+				"externalConsole": false,
+			}
+		}
 	]
 }

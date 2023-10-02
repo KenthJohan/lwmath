@@ -1,0 +1,23 @@
+{
+	"id": "map_demo",
+	"type": "application",
+	"value": {
+		"language": "c",
+		"public": false,
+		"use": [
+			"lwmath"
+		]
+	},
+	"lang.c": {
+		"lib": [
+			"lwmath"
+		],
+		"cflags": [
+			"-Werror",
+			"-Wall",
+			"-Wpedantic",
+			"-Wextra",
+			"-Wno-error=unused-variable"
+		]
+	}
+}

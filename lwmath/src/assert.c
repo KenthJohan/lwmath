@@ -6,6 +6,9 @@
 
 void lwmath_abort()
 {
+	printf("%s", "\n");
+	fflush(stderr);
+	fflush(stdout);
 	abort();
 }
 
