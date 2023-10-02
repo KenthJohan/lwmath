@@ -94,64 +94,44 @@ static map_bucket_t *map_get_bucket(const map_t *map, uint64_t key)
 	return &map->buckets[bucket_id];
 }
 
-static uint64_t *bucket_get_value(map_bucket_t *bucket, uint64_t key)
+static map_entry_t *bucket_get_entry(map_bucket_t *bucket, uint64_t key)
 {
 	map_entry_t *entry;
 	for (entry = bucket->first; entry; entry = entry->next)
 	{
 		if (entry->key == key)
 		{
-			return &entry->value;
+			return entry;
 		}
 	}
 	return NULL;
 }
 
-static uint64_t *bucket_add(map_bucket_t *bucket, uint64_t key)
+static void bucket_add(map_bucket_t *bucket, uint64_t key, map_entry_t *new_entry)
 {
-	map_entry_t *new_entry = calloc(1, sizeof(map_entry_t));
 	new_entry->key = key;
 	new_entry->next = bucket->first;
 	bucket->first = new_entry;
-	return &new_entry->value;
 }
 
-static uint64_t map_bucket_remove(map_t *map, map_bucket_t *bucket, uint64_t key)
+static map_entry_t *map_bucket_remove(map_t *map, map_bucket_t *bucket, uint64_t key)
 {
 	map_entry_t *entry;
 	for (entry = bucket->first; entry; entry = entry->next)
 	{
 		if (entry->key == key)
 		{
-			uint64_t value = entry->value;
 			map_entry_t **next_holder = &bucket->first;
 			while (*next_holder != entry)
 			{
 				next_holder = &(*next_holder)->next;
 			}
 			*next_holder = entry->next;
-			free(entry);
 			map->count--;
-			return value;
+			return entry;
 		}
 	}
-
-	return 0;
-}
-
-uint64_t *map_get(map_t const *map, uint64_t key)
-{
-	return bucket_get_value(map_get_bucket(map, key), key);
-}
-
-void *map_get_deref(const map_t *map, uint64_t key)
-{
-	uint64_t *ptr = bucket_get_value(map_get_bucket(map, key), key);
-	if (ptr)
-	{
-		return (void *)(uintptr_t)ptr[0];
-	}
-	return NULL;
+	return entry;
 }
 
 void map_init(map_t *map)
@@ -160,7 +140,23 @@ void map_init(map_t *map)
 	map_rehash(map, 0);
 }
 
-void map_insert(map_t *map, uint64_t key, uint64_t value)
+void map_fini(map_t *map)
+{
+	if (map->bucket_shift == 0)
+	{
+		return;
+	}
+	free(map->buckets);
+	memset(map, 0, sizeof(map_t));
+}
+
+map_entry_t *map_get(map_t const *map, uint64_t key)
+{
+	map_bucket_t *bucket = map_get_bucket(map, key);
+	return bucket_get_entry(bucket, key);
+}
+
+void map_insert(map_t *map, uint64_t key, map_entry_t *entry)
 {
 	lwmath_assert(map_get(map, key) == NULL, "Key already set");
 	int32_t map_count = ++map->count;
@@ -171,147 +167,55 @@ void map_insert(map_t *map, uint64_t key, uint64_t value)
 		map_rehash(map, tgt_bucket_count);
 	}
 	map_bucket_t *bucket = map_get_bucket(map, key);
-	bucket_add(bucket, key)[0] = value;
+	bucket_add(bucket, key, entry);
 }
 
-void *map_insert_alloc(map_t *map, int elem_size, uint64_t key)
-{
-	void *elem = calloc(1, elem_size);
-	map_insert(map, key, (uintptr_t)elem);
-	return elem;
-}
-
-uint64_t *map_ensure(map_t *map, uint64_t key)
+map_entry_t *map_remove(map_t *map, uint64_t key)
 {
 	map_bucket_t *bucket = map_get_bucket(map, key);
-	uint64_t *result = bucket_get_value(bucket, key);
-	if (result)
-	{
-		return result;
-	}
-
-	int32_t map_count = ++map->count;
-	int32_t tgt_bucket_count = map_get_bucket_count(map_count);
-	int32_t bucket_count = map->bucket_count;
-	if (tgt_bucket_count > bucket_count)
-	{
-		map_rehash(map, tgt_bucket_count);
-		bucket = map_get_bucket(map, key);
-	}
-
-	uint64_t *v = bucket_add(bucket, key);
-	*v = 0;
-	return v;
-}
-
-void *map_ensure_alloc(map_t *map, int elem_size, uint64_t key)
-{
-	uint64_t *val = map_ensure(map, key);
-	if ((*val) == 0)
-	{
-		void *elem = calloc(1, elem_size);
-		*val = (uint64_t)(uintptr_t)elem;
-		return elem;
-	}
-	else
-	{
-		return (void *)(uintptr_t)*val;
-	}
-}
-
-uint64_t map_remove(map_t *map, uint64_t key)
-{
-	return map_bucket_remove(map, map_get_bucket(map, key), key);
+	return map_bucket_remove(map, bucket, key);
 }
 
 map_iter_t map_iter(const map_t *map)
 {
-	if (map->bucket_shift != 0)
-	{
-		return (map_iter_t){
-			.map = map,
-			.bucket = NULL,
-			.entry = NULL};
-	}
-	else
+	if (map->bucket_shift == 0)
 	{
 		return (map_iter_t){0};
 	}
+	map_iter_t it = {
+		.entry = map->buckets->first,
+		.bucket = map->buckets,
+		.end = map->buckets + map->bucket_count};
+	return it;
 }
 
-int map_next(map_iter_t *iter)
+map_entry_t *map_next(map_iter_t *iter)
 {
-	const map_t *map = iter->map;
-	map_bucket_t *end;
-	if (!map || (iter->bucket == (end = &map->buckets[map->bucket_count])))
+	map_entry_t *entry = iter->entry;
+
+	// Check if current bucket has entries, if so then return that entry:
+	if (entry != NULL)
 	{
-		return 0;
+		iter->entry = entry->next;
+		return entry;
 	}
 
-	map_entry_t *entry = NULL;
-	if (!iter->bucket)
+	// At this point current bucket does not have any entries 
+	// so we need to find a bucket that contains entries.
+	// Lets find first non empty bucket and return first entry:
+	do
 	{
-		for (iter->bucket = map->buckets; iter->bucket != end; ++iter->bucket)
+		++iter->bucket;
+		if (iter->bucket == iter->end)
 		{
-			if (iter->bucket->first)
-			{
-				entry = iter->bucket->first;
-				break;
-			}
+			return NULL;
 		}
-		if (iter->bucket == end)
-		{
-			return 0;
-		}
-	}
-	else if ((entry = iter->entry) == NULL)
-	{
-		do
-		{
-			++iter->bucket;
-			if (iter->bucket == end)
-			{
-				return 0;
-			}
-		} while (!iter->bucket->first);
 		entry = iter->bucket->first;
-	}
-
+	} while (entry == NULL);
+	
 	lwmath_assert(entry != NULL, "");
+
 	iter->entry = entry->next;
-	iter->res = &entry->key;
 
-	return 1;
-}
-
-static void bucket_clear(map_bucket_t *bucket)
-{
-	map_entry_t *entry = bucket->first;
-	while (entry)
-	{
-		map_entry_t *next = entry->next;
-		free(entry);
-		entry = next;
-	}
-}
-
-void map_fini(map_t *map)
-{
-	if (map->bucket_shift == 0)
-	{
-		return;
-	}
-
-	map_bucket_t *bucket = map->buckets;
-	map_bucket_t *end = &bucket[map->bucket_count];
-	while (bucket != end)
-	{
-		bucket_clear(bucket);
-		bucket++;
-	}
-
-	free(map->buckets);
-
-	//map->bucket_shift = 0;
-	memset(map, 0, sizeof(map_t));
+	return entry;
 }

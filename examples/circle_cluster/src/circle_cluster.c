@@ -56,7 +56,15 @@ void put_flag_by_mouse(uint32_t *flags, int w, int h, tigr_mouse_t *mouse)
 	}
 }
 
-void labels_mapping(uint32_t *labels, int w, int h, map_t * map)
+
+typedef struct
+{
+	map_entry_t entry;
+	vec2_t buf[0];
+} region_t;
+
+
+void labels_mapping(uint32_t *labels, uint32_t *components, int w, int h, map_t * map)
 {
 	int j = 0;
 	for (int y = 0; y < h; ++y)
@@ -64,10 +72,15 @@ void labels_mapping(uint32_t *labels, int w, int h, map_t * map)
 		for (int x = 0; x < w; ++x)
 		{
 			int i = y * w + x;
-			uint32_t c = labels[i];
-			if (c > 0)
+			uint32_t key = labels[i];
+			if (key > 0)
 			{
-				void * ptr = map_ensure(map, c);
+				uint32_t n = components[i];
+				region_t * region = calloc(1, sizeof(region_t) + sizeof(vec2_t)*n);
+				map_insert(map, key, &region->entry);
+
+				//vec2_t * ptr = map_ensure_alloc(map, sizeof(vec2_t)*n, key);
+
 			}
 		}
 	}
