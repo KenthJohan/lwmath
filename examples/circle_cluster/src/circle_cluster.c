@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <float.h>
+#include <assert.h>
 
 #include <lwmath/lin.h>
 #include <lwmath/cclab.h>
+#include <lwmath/fitcirc.h>
 #include <lwmath/map.h>
 
 #include <tigr/tigr.h>
@@ -16,7 +18,7 @@
 
 #define MAX_POINTS 128
 
-void connected_components_demo(uint32_t *input, uint32_t *comp, uint32_t *labels, Tigr *out)
+void paint_labels(uint32_t *input, uint32_t *comp, uint32_t *labels, Tigr *out)
 {
 	TPixel *pix = out->pix;
 	int n = out->w * out->h;
@@ -47,22 +49,34 @@ void connected_components_demo(uint32_t *input, uint32_t *comp, uint32_t *labels
 
 void put_flag_by_mouse(uint32_t *flags, int w, int h, tigr_mouse_t *mouse)
 {
-	if (mouse->down)
-	{
-		int x = mouse->x;
-		int y = mouse->y;
-		int i = y * w + x;
-		flags[i] ^= THE_FLAG;
-	}
+	int x = mouse->x;
+	int y = mouse->y;
+	int i = y * w + x;
+	flags[i] ^= THE_FLAG;
+	printf("%i\n", flags[i]);
 }
 
 
 typedef struct
 {
 	map_entry_t entry;
-	vec2_t buf[0];
+	int cap;
+	int count;
+	vec2_t buf[];
 } region_t;
 
+region_t * region_map_ensure(map_t * map, uint64_t key, int cap)
+{
+	region_t * region = map_get_t(map, key, region_t, entry);
+	if(region == NULL)
+	{
+		region = calloc(1, sizeof(region_t) + sizeof(vec2_t)*cap);
+		region->cap = cap;
+		region->count = 0;
+		map_insert(map, key, &region->entry);
+	}
+	return region;
+}
 
 void labels_mapping(uint32_t *labels, uint32_t *components, int w, int h, map_t * map)
 {
@@ -75,16 +89,61 @@ void labels_mapping(uint32_t *labels, uint32_t *components, int w, int h, map_t 
 			uint32_t key = labels[i];
 			if (key > 0)
 			{
-				uint32_t n = components[i];
-				region_t * region = calloc(1, sizeof(region_t) + sizeof(vec2_t)*n);
-				map_insert(map, key, &region->entry);
-
-				//vec2_t * ptr = map_ensure_alloc(map, sizeof(vec2_t)*n, key);
-
+				uint32_t n = components[key];
+				region_t * region = region_map_ensure(map, key, n);
+				assert(region->count < region->cap);
+				region->buf[region->count].x = x;
+				region->buf[region->count].y = y;
+				region->count++;
 			}
 		}
 	}
 }
+
+void regions_flush(map_t * map)
+{
+	map_iter_t it = map_iter(map);
+	while(1)
+	{
+		map_entry_t * e = map_next(&it);
+		if(e == NULL)
+		{
+			break;
+		}
+		region_t * r = map_entry(e, region_t, entry);
+		free(r);
+	}
+	map_clear(map);
+}
+
+
+void circle1_and_flush(map_t * map, Tigr *out)
+{
+	map_iter_t it = map_iter(map);
+	while(1)
+	{
+		map_entry_t * e = map_next(&it);
+		if(e == NULL)
+		{
+			break;
+		}
+		region_t * region = map_entry(e, region_t, entry);
+		float a;
+		float b;
+		float r;
+		fitcirc((float *)region->buf, region->count, 2, &a, &b, &r);
+		free(region);
+		printf("fitcirc %f %f %f\n", a, b, r);
+		if(a >= 0 && a < out->w && b >= 0 && b < out->h && r > 0)
+		{
+			tigrCircle(out, a, b, r, tigrRGB(0xFF, 0xFF, 0xFF));
+		}
+	}
+	map_clear(map);
+}
+
+
+
 
 
 typedef struct
@@ -107,30 +166,31 @@ int main(int argc, char *argv[])
 	uint32_t *labels = calloc(1, sizeof(uint32_t) * w * h);
 	uint32_t *components = calloc(1, sizeof(uint32_t) * w * h);
 	map_t map = {0};
-	map_init(&map);
+	map_init(&map, 10);
 
 	while (!tigrClosed(bmp_screen))
 	{
-		tigrClear(bmp_screen, tigrRGB(0x00, 0x00, 0x00));
 		// tigrCircle(screen, 50, 50, 10, tigrRGB(0xFF, 0xFF, 0xFF));
 		tigr_mouse_get(bmp_screen, &app.mouse);
 
-		put_flag_by_mouse(flags, w, h, &app.mouse);
-
-		cclab_union_find(flags, THE_FLAG, components, labels, w, h, 1);
-		labels_mapping(labels, w, h, &map);
-		
-		connected_components_demo(flags, components, labels, bmp_labels);
-
-		tigrBlitAlpha(bmp_screen, bmp_labels, 0, 0, 0, 0, w, h, 0.5f);
-		tigrBlitAlpha(bmp_screen, bmp_paint, 0, 0, 0, 0, w, h, 0.5f);
-
-		tigrUpdate(bmp_screen);
-
 		if (app.mouse.down)
 		{
-			printf("clist_count %i\n", app.clist_count);
+			tigrClear(bmp_paint, tigrRGB(0x00, 0x00, 0x00));
+			put_flag_by_mouse(flags, w, h, &app.mouse);
+			cclab_union_find(flags, THE_FLAG, components, labels, w, h, 1);
+			labels_mapping(labels, components, w, h, &map);
+			printf("map.count %i\n", map.count);
+			circle1_and_flush(&map, bmp_paint);
+			//regions_flush(&map);
+
+			paint_labels(flags, components, labels, bmp_labels);
 		}
+
+		tigrClear(bmp_screen, tigrRGB(0x00, 0x00, 0x00));
+		tigrBlitAlpha(bmp_screen, bmp_labels, 0, 0, 0, 0, w, h, 0.5f);
+		tigrBlitAlpha(bmp_screen, bmp_paint, 0, 0, 0, 0, w, h, 0.5f);
+		tigrUpdate(bmp_screen);
+
 	}
 	tigrFree(bmp_screen);
 	tigrFree(bmp_paint);

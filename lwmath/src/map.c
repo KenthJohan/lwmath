@@ -222,3 +222,10 @@ map_entry_t *map_next(map_iter_t *iter)
 
 	return entry;
 }
+
+
+void map_clear(map_t *map)
+{
+	map->count = 0;
+	memset(map->buckets, 0, sizeof(map_bucket_t) * map->bucket_count);
+}

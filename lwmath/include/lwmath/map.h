@@ -47,6 +47,8 @@ map_entry_t *map_remove(map_t *map, uint64_t key);
 
 
 
+void map_clear(map_t *map);
+
 map_iter_t map_iter(const map_t *map);
 
 map_entry_t * map_next(map_iter_t *iter);
