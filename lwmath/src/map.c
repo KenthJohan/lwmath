@@ -1,13 +1,16 @@
+/*
+Copied some code from
+https://github.com/SanderMertens/flecs/blob/master/src/datastructures/map.c
+
+
+*/
+
 #include "lwmath/map.h"
 #include "lwmath_assert.h"
 #include <stdlib.h>
 #include <string.h>
 
 #define MAP_LOAD_FACTOR (12)
-#define MAP_OFFSET(o, offset) (void *)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
-#define MAP_ELEM(ptr, size, index) MAP_OFFSET(ptr, (size) * (index))
-#define MAP_ELEM_T(o, T, index) MAP_ELEM(o, sizeof(T), index)
-#define MAP_BUCKET_END(b, c) MAP_ELEM_T(b, map_bucket_t, c)
 
 static uint8_t map_log2(uint32_t v)
 {
@@ -62,7 +65,7 @@ static void map_rehash(map_t *map, int32_t count)
 	int32_t old_count = map->bucket_count;
 	map_bucket_t *buckets = map->buckets;
 	map_bucket_t *b;
-	map_bucket_t *end = MAP_BUCKET_END(buckets, old_count);
+	map_bucket_t *end = buckets + old_count;
 
 	map->buckets = calloc(1, sizeof(map_bucket_t) * count);
 	map->bucket_count = count;
@@ -134,10 +137,10 @@ static map_entry_t *map_bucket_remove(map_t *map, map_bucket_t *bucket, uint64_t
 	return entry;
 }
 
-void map_init(map_t *map)
+void map_init(map_t *map, int32_t n)
 {
 	memset(map, 0, sizeof(map_t));
-	map_rehash(map, 0);
+	map_rehash(map, n);
 }
 
 void map_fini(map_t *map)

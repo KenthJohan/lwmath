@@ -1,8 +1,3 @@
-/*
-Copied from
-https://github.com/SanderMertens/flecs/blob/master/src/datastructures/map.c
-*/
-
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
@@ -36,13 +31,15 @@ typedef struct map_iter_t
 	map_entry_t *entry;
 } map_iter_t;
 
-void map_init(map_t *map);
+void map_init(map_t *map, int32_t n);
 
 void map_fini(map_t *map);
 
 void map_insert(map_t *map, uint64_t key, map_entry_t * entry);
 
 map_entry_t *map_get(map_t const *map, uint64_t key);
+
+#define map_get_t(map, key, t, entry) map_entry(map_get(map, key), t, entry)
 
 map_entry_t *map_remove(map_t *map, uint64_t key);
 
