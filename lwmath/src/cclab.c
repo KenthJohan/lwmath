@@ -102,7 +102,7 @@ void cclab_union_coords(uint32_t const *input, uint32_t mask, uint32_t *componen
 }
 
 
-void cclab_count(uint32_t *input, uint32_t * hgram, uint32_t n)
+void cclab_count(uint32_t const *input, uint32_t * hgram, uint32_t n)
 {
 	lwmath_assert_notnull(input);
 	lwmath_assert_notnull(hgram);
