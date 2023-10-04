@@ -2,9 +2,7 @@
 	"id": "tigr",
 	"type": "package",
 	"value": {
-		"use": [
-			"platform"
-		],
+		"use": [],
 		"language": "c",
 		"public": true
 	},

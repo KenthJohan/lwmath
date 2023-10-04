@@ -16,7 +16,7 @@
 
 void connected_components_demo(Tigr const *bmp, uint32_t * comp, uint32_t * labels, Tigr *out)
 {
-	cclab_union_find((uint32_t*)bmp->pix, 0xFFFFFFFF, comp, labels, bmp->w, bmp->h);
+	cclab_union_find((uint32_t*)bmp->pix, 0xFFFFFFFF, comp, labels, bmp->w, bmp->h, 0);
 	TPixel * pix = out->pix;
 	for(int i = 0; i < (bmp->w * bmp->h); ++i, ++pix)
 	{
@@ -54,7 +54,6 @@ void paint(Tigr *bmp, app_t * app)
 
 int main(int argc, char *argv[])
 {
-	ecs_world_t *world = ecs_init();
 	app_t app = {0};
 	Tigr *screen = tigrWindow(100, 100, "circle_fitting", 0);
 	Tigr *backdrop = tigrBitmap(screen->w, screen->h);
@@ -76,7 +75,5 @@ int main(int argc, char *argv[])
 	}
 	tigrFree(screen);
 	tigrFree(backdrop);
-
-	ecs_fini(world);
 	return 0;
 }

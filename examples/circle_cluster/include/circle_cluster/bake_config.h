@@ -18,7 +18,7 @@
 #define CIRCLE_CLUSTER_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
-#include <flecs.h>
+/* No dependencies */
 
 #endif
 
