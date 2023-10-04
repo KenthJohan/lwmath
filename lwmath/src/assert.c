@@ -1,8 +1,8 @@
 #include "lwmath_assert.h"
 #include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 void lwmath_abort()
 {
@@ -13,13 +13,12 @@ void lwmath_abort()
 }
 
 int lwmath_assert_(
-	const char *expr, 
-	const char *file, 
-	int32_t line, 
-	const char *fn, 
-	const char *fmt, 
-	...
-	)
+    const char *expr,
+    const char *file,
+    int32_t line,
+    const char *fn,
+    const char *fmt,
+    ...)
 {
 	va_list args;
 	va_start(args, fmt);

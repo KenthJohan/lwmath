@@ -1,6 +1,6 @@
 #include "tigr/tigr_mouse.h"
 
-void tigr_mouse_get(Tigr* screen, tigr_mouse_t * mouse)
+void tigr_mouse_get(Tigr *screen, tigr_mouse_t *mouse)
 {
 	int b;
 	tigrMouse(screen, &mouse->x, &mouse->y, &b);

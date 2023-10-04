@@ -1,13 +1,13 @@
 #include "lwmath/fitcirc.h"
 #include "lwmath/lin.h"
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 
 /*
 https://www.scribd.com/document/14819165/Regressions-coniques-quadriques-circulaire-spherique
 page 11 to 15
 */
-void fitcirc(void * data, int n, int stride, float * out_a, float * out_b, float * out_r)
+void fitcirc(void *data, int n, int stride, float *out_a, float *out_b, float *out_r)
 {
 	float sum_x = 0;
 	float sum_y = 0;
@@ -18,21 +18,20 @@ void fitcirc(void * data, int n, int stride, float * out_a, float * out_b, float
 	float sum_xxy = 0;
 	float sum_xyy = 0;
 	float sum_yyy = 0;
-	char * ptr = data;
-	for (int i = 0; i < n; ++i, ptr += stride)
-	{
-		float * p = (float *)ptr;
+	char *ptr = data;
+	for (int i = 0; i < n; ++i, ptr += stride) {
+		float *p = (float *)ptr;
 		float x = p[0];
 		float y = p[1];
 		sum_x += x;
 		sum_y += y;
-		sum_xx += x*x;
-		sum_xy += x*y;
-		sum_yy += y*y;
-		sum_xxx += x*x*x;
-		sum_xxy += x*x*y;
-		sum_xyy += x*y*y;
-		sum_yyy += y*y*y;
+		sum_xx += x * x;
+		sum_xy += x * y;
+		sum_yy += y * y;
+		sum_xxx += x * x * x;
+		sum_xxy += x * x * y;
+		sum_xyy += x * y * y;
+		sum_yyy += y * y * y;
 	}
 
 	/*
@@ -66,14 +65,14 @@ void fitcirc(void * data, int n, int stride, float * out_a, float * out_b, float
 	printf("d30 %E  = 8.41728E11\n", d30);
 	*/
 
-	float h = 2.0 * ((d20 * d02) - (d11*d11));
+	float h = 2.0 * ((d20 * d02) - (d11 * d11));
 	// La résolution du système de deux équations linéaires donne les cordonnées (a,b) du centre du cercle :
 	float a = (((d30 + d12) * d02) - ((d03 + d21) * d11)) / h;
 	float b = (((d03 + d21) * d20) - ((d30 + d12) * d11)) / h;
 
 	// Puis, en revenant à la 3ième équation du système initial, on obtient le rayon du cercle :
 	float c = (1.0f / (float)n) * ((sum_xx + sum_yy) - (2.0f * a * sum_x) - (2.0f * b * sum_y));
-	float r = sqrtf(c + a*a + b*b);
+	float r = sqrtf(c + a * a + b * b);
 
 	out_a[0] = a;
 	out_b[0] = b;
@@ -84,30 +83,23 @@ float fitcirc_error(float x, float y, float a, float b, float r)
 {
 	float xa = x - a;
 	float yb = y - b;
-	return r - sqrtf(xa*xa + yb*yb);
+	return r - sqrtf(xa * xa + yb * yb);
 }
 
-
-float fitcirc_error2(void * data, int n, int stride, float a, float b, float r)
+float fitcirc_error2(void *data, int n, int stride, float a, float b, float r)
 {
-	char * ptr = data;
+	char *ptr = data;
 	float sum = 0;
-	for (int i = 0; i < n; ++i, ptr += stride)
-	{
-		float * p = (float *)ptr;
+	for (int i = 0; i < n; ++i, ptr += stride) {
+		float *p = (float *)ptr;
 		float x = p[0];
 		float y = p[1];
 		float e = fitcirc_error(x, y, a, b, r);
-		sum += e*e;
+		sum += e * e;
 	}
 	sum = (1.0 / (float)n) * sum;
 	return sqrtf(sum);
 }
-
-
-
-
-
 
 /*
 
@@ -198,70 +190,50 @@ void tigrFillCircle(Tigr* bmp, int x0, int y0, int r, TPixel color) {
 
 */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void test()
 {
 	vec2_t p[] = {
-	{1957.3, 60.27},
-	{1941.6, 76.56},
-	{1932.0, 86.06},
-	{1915.7, 101.7},
-	{1902.6, 113.8},
-	{1886.7, 127.7},
-	{1863.9, 146.8},
-	{1829.0, 173.7},
-	{1786.3, 203.3},
-	{1747.3, 227.5},
-	{1678.2, 264.3},
-	{1625.0, 288},
-	{1582.7, 304.1},
-	{1507.3, 327.3},
-	{1421.1, 345.8},
-	{1326.2, 356.7},
-	{1253.0, 358.5},
-	{1146.8, 351.3},
-	{1075.7, 339.6},
-	{1028.1, 328.7},
-	{955.11, 306.8},
-	{881.0, 277.7},
-	{812.45, 244.2},
-	{769.8, 219.7},
-	{717.9, 185.7},
-	{687.45, 163.4},
-	{666.82, 147.2},
-	{640.7, 125.3},
-	{619.05, 105.9},
-	{599.57, 87.44},
-	{587.53, 75.47},
-	{572.79, 60.2},
-	{564.11, 50.9},
-	{558.41, 44.63},
-	{551.71, 37.14},
+	    {1957.3, 60.27},
+	    {1941.6, 76.56},
+	    {1932.0, 86.06},
+	    {1915.7, 101.7},
+	    {1902.6, 113.8},
+	    {1886.7, 127.7},
+	    {1863.9, 146.8},
+	    {1829.0, 173.7},
+	    {1786.3, 203.3},
+	    {1747.3, 227.5},
+	    {1678.2, 264.3},
+	    {1625.0, 288},
+	    {1582.7, 304.1},
+	    {1507.3, 327.3},
+	    {1421.1, 345.8},
+	    {1326.2, 356.7},
+	    {1253.0, 358.5},
+	    {1146.8, 351.3},
+	    {1075.7, 339.6},
+	    {1028.1, 328.7},
+	    {955.11, 306.8},
+	    {881.0, 277.7},
+	    {812.45, 244.2},
+	    {769.8, 219.7},
+	    {717.9, 185.7},
+	    {687.45, 163.4},
+	    {666.82, 147.2},
+	    {640.7, 125.3},
+	    {619.05, 105.9},
+	    {599.57, 87.44},
+	    {587.53, 75.47},
+	    {572.79, 60.2},
+	    {564.11, 50.9},
+	    {558.41, 44.63},
+	    {551.71, 37.14},
 	};
-	//void circfit(float * p, int n, int stride, float * out_a, float * out_b, float * out_r);
+	// void circfit(float * p, int n, int stride, float * out_a, float * out_b, float * out_r);
 	float a;
 	float b;
 	float r;
-	fitcirc((float*)&p, sizeof(p) / sizeof(vec2_t), 2, &a, &b, &r);
+	fitcirc((float *)&p, sizeof(p) / sizeof(vec2_t), 2, &a, &b, &r);
 	printf("abr: %f %f %f\n", a, b, r);
 	return;
 }

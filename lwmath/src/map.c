@@ -15,8 +15,8 @@ https://github.com/SanderMertens/flecs/blob/master/src/datastructures/map.c
 static uint8_t map_log2(uint32_t v)
 {
 	static const uint8_t log2table[32] =
-		{0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
-		 8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31};
+	    {0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+	     8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31};
 	v |= v >> 1;
 	v |= v >> 2;
 	v |= v >> 4;
@@ -56,8 +56,7 @@ static int32_t map_get_bucket_count(int32_t count)
 static void map_rehash(map_t *map, int32_t count)
 {
 	count = next_pow_of_2(count);
-	if (count < 2)
-	{
+	if (count < 2) {
 		count = 2;
 	}
 	lwmath_assert(count > map->bucket_count, "");
@@ -72,11 +71,9 @@ static void map_rehash(map_t *map, int32_t count)
 	map->bucket_shift = get_shift(count);
 
 	/* Remap old bucket entries to new buckets */
-	for (b = buckets; b < end; b++)
-	{
+	for (b = buckets; b < end; b++) {
 		map_entry_t *entry;
-		for (entry = b->first; entry;)
-		{
+		for (entry = b->first; entry;) {
 			map_entry_t *next = entry->next;
 			int32_t bucket_index = get_index(map->bucket_shift, entry->key);
 			map_bucket_t *bucket = &map->buckets[bucket_index];
@@ -100,10 +97,8 @@ static map_bucket_t *map_get_bucket(const map_t *map, uint64_t key)
 static map_entry_t *bucket_get_entry(map_bucket_t *bucket, uint64_t key)
 {
 	map_entry_t *entry;
-	for (entry = bucket->first; entry; entry = entry->next)
-	{
-		if (entry->key == key)
-		{
+	for (entry = bucket->first; entry; entry = entry->next) {
+		if (entry->key == key) {
 			return entry;
 		}
 	}
@@ -120,13 +115,10 @@ static void bucket_add(map_bucket_t *bucket, uint64_t key, map_entry_t *new_entr
 static map_entry_t *map_bucket_remove(map_t *map, map_bucket_t *bucket, uint64_t key)
 {
 	map_entry_t *entry;
-	for (entry = bucket->first; entry; entry = entry->next)
-	{
-		if (entry->key == key)
-		{
+	for (entry = bucket->first; entry; entry = entry->next) {
+		if (entry->key == key) {
 			map_entry_t **next_holder = &bucket->first;
-			while (*next_holder != entry)
-			{
+			while (*next_holder != entry) {
 				next_holder = &(*next_holder)->next;
 			}
 			*next_holder = entry->next;
@@ -145,8 +137,7 @@ void map_init(map_t *map, int32_t n)
 
 void map_fini(map_t *map)
 {
-	if (map->bucket_shift == 0)
-	{
+	if (map->bucket_shift == 0) {
 		return;
 	}
 	free(map->buckets);
@@ -165,8 +156,7 @@ void map_insert(map_t *map, uint64_t key, map_entry_t *entry)
 	int32_t map_count = ++map->count;
 	int32_t tgt_bucket_count = map_get_bucket_count(map_count);
 	int32_t bucket_count = map->bucket_count;
-	if (tgt_bucket_count > bucket_count)
-	{
+	if (tgt_bucket_count > bucket_count) {
 		map_rehash(map, tgt_bucket_count);
 	}
 	map_bucket_t *bucket = map_get_bucket(map, key);
@@ -181,14 +171,13 @@ map_entry_t *map_remove(map_t *map, uint64_t key)
 
 map_iter_t map_iter(const map_t *map)
 {
-	if (map->bucket_shift == 0)
-	{
+	if (map->bucket_shift == 0) {
 		return (map_iter_t){0};
 	}
 	map_iter_t it = {
-		.entry = map->buckets->first,
-		.bucket = map->buckets,
-		.end = map->buckets + map->bucket_count};
+	    .entry = map->buckets->first,
+	    .bucket = map->buckets,
+	    .end = map->buckets + map->bucket_count};
 	return it;
 }
 
@@ -198,25 +187,22 @@ map_entry_t *map_next(map_iter_t *iter)
 
 	// Check if current bucket has entries, if so then return that entry:
 	entry = iter->entry;
-	if (entry != NULL)
-	{
+	if (entry != NULL) {
 		iter->entry = entry->next;
 		return entry;
 	}
 
-	// At this point current bucket does not have any entries 
+	// At this point current bucket does not have any entries
 	// so we need to find a bucket that contains entries.
 	// Lets find first non empty bucket and return first entry:
-	do
-	{
+	do {
 		++iter->bucket;
-		if (iter->bucket == iter->end)
-		{
+		if (iter->bucket == iter->end) {
 			return NULL;
 		}
 		entry = iter->bucket->first;
 	} while (entry == NULL);
-	
+
 	lwmath_assert(entry != NULL, "Internal logic error");
 
 	// Set current bucket to next entry:
@@ -224,7 +210,6 @@ map_entry_t *map_next(map_iter_t *iter)
 
 	return entry;
 }
-
 
 void map_clear(map_t *map)
 {
