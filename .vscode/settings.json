@@ -5,7 +5,12 @@
 	"editor.fontSize": 14,
 	"terminal.integrated.fontSize": 14,
 	"window.zoomLevel": 1.3,
-	"files.associations": {},
+	"files.associations": {
+		"assert.h": "c",
+		"fitcirc.h": "c",
+		"stdio.h": "c",
+		"random": "c"
+	},
 	"terminal.integrated.env.linux": {
 		"GTK_PATH": ""
 	}

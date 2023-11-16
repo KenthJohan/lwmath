@@ -13,7 +13,6 @@
 		"lib": [
 			"tigr",
 			"lwmath",
-			"flecs",
 			"m",
 			"GL",
 			"X11"

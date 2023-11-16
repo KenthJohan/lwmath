@@ -1,5 +1,6 @@
 #include "lwmath/fitcirc.h"
 #include "lwmath/lin.h"
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 
@@ -79,26 +80,72 @@ void fitcirc(void *data, int n, int stride, float *out_a, float *out_b, float *o
 	out_r[0] = r;
 }
 
-float fitcirc_error(float x, float y, float a, float b, float r)
+float fitcirc_error1(float x, float y, float a, float b, float r, fitcirc_l_t l)
 {
-	float xa = x - a;
-	float yb = y - b;
-	return r - sqrtf(xa * xa + yb * yb);
+	float dx = x - a;
+	float dy = y - b;
+	float sum = 0;
+	switch (l) {
+	case FITCIRC_L1:
+		sum = r - sqrtf((dx * dx) + (dy * dy));
+		break;
+	case FITCIRC_L2:
+		sum = r * r - ((dx * dx) + (dy * dy));
+		break;
+	case FITCIRC_CMP:
+		sum = (r - sqrtf((dx * dx) + (dy * dy))) > 0 ? -1 : 1;
+		break;
+	case FITCIRC_ABS:
+		sum = sqrtf((dx * dx) + (dy * dy));
+		break;
+	}
+	return sum;
 }
 
-float fitcirc_error2(void *data, int n, int stride, float a, float b, float r)
+float fitcirc_error(void *data, int n, int stride, float a, float b, float r, fitcirc_efn_t efx)
 {
 	char *ptr = data;
 	float sum = 0;
+	float e = 0;
 	for (int i = 0; i < n; ++i, ptr += stride) {
 		float *p = (float *)ptr;
 		float x = p[0];
 		float y = p[1];
-		float e = fitcirc_error(x, y, a, b, r);
-		sum += e * e;
+		switch (efx) {
+		case FITCIRC_EFN_EQM:
+			e = fitcirc_error1(x, y, a, b, r, FITCIRC_L1);
+			sum += (e * e);
+			break;
+		case FITCIRC_EFN_SIGNED:
+			e = fitcirc_error1(x, y, a, b, r, FITCIRC_L1);
+			sum += e;
+			break;
+		case FITCIRC_EFN_OUTLIERS:
+			e = fitcirc_error1(x, y, a, b, r, FITCIRC_CMP);
+			sum += e;
+			break;
+		case FITCIRC_EFN_ABS:
+			e = fitcirc_error1(x, y, a, b, r, FITCIRC_ABS);
+			assert(e >= 0);
+			sum += e;
+			break;
+
+		default:
+			break;
+		}
 	}
-	sum = (1.0 / (float)n) * sum;
-	return sqrtf(sum);
+	switch (efx) {
+	case FITCIRC_EFN_SIGNED:
+	case FITCIRC_EFN_ABS:
+		sum = sum / (float)n;
+		break;
+	case FITCIRC_EFN_EQM:
+		sum = sqrtf(sum / (float)n);
+		break;
+	default:
+		break;
+	}
+	return sum;
 }
 
 /*

@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <float.h>
 #include <assert.h>
+#include <math.h>
 
 #include <lwmath/lin.h>
 #include <lwmath/cclab.h>
@@ -54,16 +55,16 @@ void put_flag_by_mouse(uint32_t *flags, int w, int h, tigr_mouse_t *mouse)
 	int i = y * w + x;
 	if(mouse->down)
 	{
-		flags[i] ^= THE_FLAG;
+		//flags[i] ^= THE_FLAG;
 	}
 
 	if(mouse->btn & 0x1)
 	{
-		//flags[i] |= THE_FLAG;
+		flags[i] |= THE_FLAG;
 	}
 	if(mouse->btn & 0x2)
 	{
-		//flags[i] &= ~THE_FLAG;
+		flags[i] &= ~THE_FLAG;
 	}
 	//printf("%i\n", flags[i]);
 }
@@ -76,6 +77,9 @@ typedef struct
 	float b;
 	float r;
 	float e;
+	float eqm1;
+	float eqm2;
+	float eqmO;
 	int cap;
 	int count;
 	vec2_t buf[];
@@ -96,7 +100,6 @@ region_t * region_map_ensure(map_t * map, uint64_t key, int cap)
 
 void labels_mapping(uint32_t *labels, uint32_t *components, int w, int h, map_t * map)
 {
-	int j = 0;
 	for (int y = 0; y < h; ++y)
 	{
 		for (int x = 0; x < w; ++x)
@@ -137,15 +140,18 @@ void paint_region(region_t * region, Tigr *out)
 	float x = region->a;
 	float y = region->b;
 	float r = region->r;
-	float w = out->w;
-	float h = out->h;
-	if(x <= 0){return;}
-	if(x >= w){return;}
-	if(y <= 0){return;}
-	if(y >= h){return;}
-	if(r <= 0){return;}
+
+	//if(x <= 0){return;}
+	//if(x >= w){return;}
+	//if(y <= 0){return;}
+	//if(y >= h){return;}
+	//if(r <= 0){return;}
+	//if(r > 10000){return;}
 	//printf("fitcirc %f %f %f\n", x, y, r);
-	tigrCircle(out, x, y, r, tigrRGB(0xFF, 0xFF, 0xFF));
+	tigrCircle(out, round(x), round(y), round(r), tigrRGBA(0xFF, 0xFF, 0xFF, 0xAA));
+	char buf[256];
+	snprintf(buf, sizeof(buf), "%f\n%f", r, region->eqmO);
+	tigrPrint(out, tfont, x+r+10, y-r-10, tigrRGBA(0xc0, 0xd0, 0xff, 0xFF), buf);
 }
 
 
@@ -160,8 +166,43 @@ void circle1(map_t * map, Tigr *out)
 			break;
 		}
 		region_t * region = map_entry(e, region_t, entry);
+
+		for(int i = 0; i < region->count; ++i)
+		{
+			float x = region->buf[i].x;
+			float y = region->buf[i].y;
+			tigrPlot(out, x, y, tigrRGBA(0xFF, 0xd0, 0x22, 0xFF));
+		}
+
 		fitcirc(region->buf, region->count, sizeof(vec2_t), &region->a, &region->b, &region->r);
+		if(!isnormal(region->a)) {continue;}
+		if(!isnormal(region->b)) {continue;}
+		if(!isnormal(region->r)) {continue;}
+
+		for(int i = 0; i < region->count; ++i)
+		{
+			float x = region->buf[i].x;
+			float y = region->buf[i].y;
+			float dx = x - region->a;
+			float dy = y - region->b;
+			float l = sqrtf(dx*dx + dy*dy);
+			if(l > region->r)
+			{
+				tigrPlot(out, x, y, tigrRGBA(0xFF, 0x00, 0x00, 0xFF));
+			}
+			else
+			{
+				tigrPlot(out, x, y, tigrRGBA(0x00, 0x00, 0xFF, 0xFF));
+			}
+		}
+
+		//region->eqm1 = fitcirc_error(region->buf, region->count, sizeof(vec2_t), region->a, region->b, region->r, FITCIRC_EFN_EQM);
+		//region->eqm2 = fitcirc_error(region->buf, region->count, sizeof(vec2_t), region->a, region->b, region->r, FITCIRC_EFN_SIGNED);
+		region->eqmO = fitcirc_error(region->buf, region->count, sizeof(vec2_t), region->a, region->b, region->r, FITCIRC_EFN_EQM);
 		paint_region(region, out);
+
+
+
 	}
 }
 
@@ -205,7 +246,7 @@ int main(int argc, char *argv[])
 			circle1(&map, bmp_paint);
 			regions_flush(&map);
 
-			paint_labels(flags, components, labels, bmp_labels);
+			//paint_labels(flags, components, labels, bmp_labels);
 		}
 
 		tigrClear(bmp_screen, tigrRGB(0x00, 0x00, 0x00));

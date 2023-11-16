@@ -40,16 +40,19 @@ void circle1(uint32_t const *flags, Tigr *out)
 	float r;
 next:
 	fitcirc(pos, j, sizeof(vec2_t), &a, &b, &r);
-	if(a >= 0 && a < w && b >= 0 && b < h && r > 0)
+	if((r < 0) || (r > 10000))
 	{
-		float e = fitcirc_error2(pos, j, sizeof(vec2_t), a, b, r);
-		char buf[64];
-		snprintf(buf, 64, "Error %f\n", e);
-		//printf("error: %f\n", e);
-		tigrPrint(out, tfont, 0, 0, tigrRGB(0xEE, 0xEE, 0x00), buf);
-		//tigrFillCircle(out, round(a), round(b), round(r), tigrRGBA(0x00, 0xAA, 0xFF, 0x88));
-		tigrCircle(out, round(a), round(b), round(r), tigrRGBA(0x77, 0x77, 0x77, 0xFF));
+		return;
 	}
+
+	float e = fitcirc_error2(pos, j, sizeof(vec2_t), a, b, r);
+	char buf[64];
+	snprintf(buf, 64, "Error %f\n", e);
+	//printf("error: %f\n", e);
+	tigrPrint(out, tfont, 0, 0, tigrRGB(0xEE, 0xEE, 0x00), buf);
+	//tigrFillCircle(out, round(a), round(b), round(r), tigrRGBA(0x00, 0xAA, 0xFF, 0x88));
+	tigrCircle(out, round(a), round(b), round(r), tigrRGBA(0x77, 0x77, 0x77, 0xFF));
+
 	return;
 }
 

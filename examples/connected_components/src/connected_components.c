@@ -10,7 +10,6 @@
 #include <tigr/tigr.h>
 #include <tigr/tigr_mouse.h>
 
-#include <flecs.h>
 
 
 
