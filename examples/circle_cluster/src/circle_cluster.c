@@ -137,6 +137,7 @@ void regions_flush(map_t * map)
 
 void paint_region(region_t * region, Tigr *out)
 {
+	assert(region->count > 0);
 	float x = region->a;
 	float y = region->b;
 	float r = region->r;
@@ -148,9 +149,10 @@ void paint_region(region_t * region, Tigr *out)
 	//if(r <= 0){return;}
 	//if(r > 10000){return;}
 	//printf("fitcirc %f %f %f\n", x, y, r);
-	tigrCircle(out, round(x), round(y), round(r), tigrRGBA(0xFF, 0xFF, 0xFF, 0xAA));
+	tigrCircle(out, round(x), round(y), round(r), tigrRGBA(0xFF, 0xFF, 0xFF, 0xDD));
 	char buf[256];
-	snprintf(buf, sizeof(buf), "%f\n%f", r, region->eqmO);
+	float ratio = (float)region->r / (float)region->count;
+	snprintf(buf, sizeof(buf), "%f\n%f", region->eqmO, ratio);
 	tigrPrint(out, tfont, x+r+10, y-r-10, tigrRGBA(0xc0, 0xd0, 0xff, 0xFF), buf);
 }
 

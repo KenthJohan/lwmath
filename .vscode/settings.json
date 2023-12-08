@@ -9,7 +9,9 @@
 		"assert.h": "c",
 		"fitcirc.h": "c",
 		"stdio.h": "c",
-		"random": "c"
+		"random": "c",
+		"map.h": "c",
+		"math.h": "c"
 	},
 	"terminal.integrated.env.linux": {
 		"GTK_PATH": ""

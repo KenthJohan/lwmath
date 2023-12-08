@@ -40,12 +40,11 @@ void circle1(uint32_t const *flags, Tigr *out)
 	float r;
 next:
 	fitcirc(pos, j, sizeof(vec2_t), &a, &b, &r);
-	if((r < 0) || (r > 10000))
-	{
-		return;
-	}
+	if(!isnormal(a)) {return;}
+	if(!isnormal(b)) {return;}
+	if(!isnormal(r)) {return;}
 
-	float e = fitcirc_error2(pos, j, sizeof(vec2_t), a, b, r);
+	float e = fitcirc_error(pos, j, sizeof(vec2_t), a, b, r, FITCIRC_EFN_EQM);
 	char buf[64];
 	snprintf(buf, 64, "Error %f\n", e);
 	//printf("error: %f\n", e);
